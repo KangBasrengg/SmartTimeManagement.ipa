@@ -7,6 +7,9 @@ on:
       - master
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   test:
     name: Test on iOS Simulator
@@ -31,7 +34,13 @@ jobs:
           xcodebuild test \
             -project SmartTimeManagement.xcodeproj \
             -scheme SmartTimeManagement \
-            -destination "id=$SIMULATOR_ID"
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination "id=$SIMULATOR_ID" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM=""
 
   build:
     name: Build unsigned IPA
