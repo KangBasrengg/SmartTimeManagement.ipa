@@ -24,7 +24,7 @@ jobs:
 
       - name: Run unit tests
         run: |
-          set -euo pipefail
+          set -uo pipefail
           SIMULATOR_ID="$(xcrun simctl list devices available | awk -F '[()]' '/iPhone/ { print $2; exit }')"
           if [ -z "$SIMULATOR_ID" ]; then
             echo "No available iPhone simulator found."
@@ -40,7 +40,17 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            DEVELOPMENT_TEAM=""
+            DEVELOPMENT_TEAM="" 2>&1 | tee xcodebuild-test.log
+
+          TEST_EXIT=${PIPESTATUS[0]}
+          if [ "$TEST_EXIT" -ne 0 ]; then
+            SUMMARY="$(grep -E "error:|warning:|Testing failed|BUILD FAILED|The following build commands failed|SwiftCompile|CompileSwift" xcodebuild-test.log | tail -n 20 | sed 's/%/%25/g; s/\r/%0D/g; s/\n/%0A/g')"
+            if [ -z "$SUMMARY" ]; then
+              SUMMARY="$(tail -n 40 xcodebuild-test.log | sed 's/%/%25/g; s/\r/%0D/g; s/\n/%0A/g')"
+            fi
+            echo "::error file=.github/workflows/build.yml,line=1,title=Xcode test failed::$SUMMARY"
+            exit "$TEST_EXIT"
+          fi
 
   build:
     name: Build unsigned IPA
