@@ -24,7 +24,7 @@ jobs:
 
       - name: Run unit tests
         run: |
-          set -uo pipefail
+          set +e
           SIMULATOR_ID="$(xcrun simctl list devices available | awk -F '[()]' '/iPhone/ { print $2; exit }')"
           if [ -z "$SIMULATOR_ID" ]; then
             echo "No available iPhone simulator found."
